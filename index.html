@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Skattekalkylator – Liberalerna Huddinge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Mulish:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 32px 16px 48px;
+    background: transparent;
+    font-family: 'Mulish', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .lib-calc {
+    --bla: #006ab3;
+    --bla-djup: #00538f;
+    --bla-morkast: #0a2f4d;
+    --saffran: #fabb00;
+    --saffran-djup: #e0a500;
+    --himmel: #00a5cf;
+    --ink: #142536;
+    --text: #2c3a49;
+    --muted: #6a7787;
+    --linje: #e4ecf3;
+    --linje-stark: #d3dfea;
+    --kort: #ffffff;
+    --sans: 'Mulish', system-ui, -apple-system, sans-serif;
+    --serif: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+
+    font-family: var(--sans);
+    color: var(--text);
+    max-width: 620px;
+    margin: 0 auto;
+    background: var(--kort);
+    border: 1px solid var(--linje);
+    border-radius: 24px;
+    box-shadow: 0 1px 2px rgba(20,37,54,0.04), 0 24px 60px -28px rgba(0,83,143,0.32);
+    overflow: hidden;
+  }
+
+  /* dekorativ blåklints-prick i hörnet, mycket diskret */
+  .lib-calc__petals {
+    position: absolute;
+    top: -42px;
+    right: -42px;
+    width: 200px;
+    height: 200px;
+    opacity: 0.10;
+    pointer-events: none;
+    color: var(--bla);
+  }
+
+  .lib-calc__inner { padding: 38px 38px 32px; position: relative; }
+
+  /* ---- Header ---- */
+  .lib-calc__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+  .lib-calc__logo {
+    width: 40px; height: 40px;
+    border-radius: 11px;
+    background: var(--bla);
+    color: #fff;
+    display: grid; place-items: center;
+    font-weight: 900;
+    font-size: 24px;
+    line-height: 1;
+    flex: none;
+  }
+  .lib-calc__brandtext {
+    font-weight: 800;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bla);
+  }
+  .lib-calc__brandtext small {
+    display: block;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ---- Rubrik ---- */
+  .lib-calc__title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 1.22;
+    color: var(--ink);
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .lib-calc__title b { color: var(--bla); font-style: normal; }
+  .lib-calc__intro {
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0 0 28px;
+    max-width: 46ch;
+    text-wrap: pretty;
+  }
+
+  /* ---- Inputs ---- */
+  .lib-field { margin-bottom: 20px; }
+  .lib-field__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 9px;
+  }
+  .lib-field__label {
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .lib-field__remove {
+    border: none; background: none; cursor: pointer;
+    font-family: var(--sans); font-weight: 600; font-size: 12.5px;
+    color: var(--muted); padding: 2px 4px; border-radius: 6px;
+  }
+  .lib-field__remove:hover { color: #c0392b; }
+
+  .lib-input {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--linje-stark);
+    border-radius: 13px;
+    background: #fbfdfe;
+    padding: 0 16px;
+    height: 56px;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  .lib-input:focus-within {
+    border-color: var(--bla);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(0,106,179,0.12);
+  }
+  .lib-input input {
+    border: none; background: none; outline: none;
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 22px;
+    color: var(--ink);
+    width: 100%;
+    letter-spacing: -0.01em;
+    -moz-appearance: textfield;
+  }
+  .lib-input input::-webkit-outer-spin-button,
+  .lib-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .lib-input__suffix {
+    font-weight: 700; font-size: 14px; color: var(--muted);
+    white-space: nowrap; padding-left: 8px; flex: none;
+  }
+
+  /* slider */
+  .lib-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 99px;
+    margin: 16px 0 4px;
+    background: var(--linje-stark);
+    outline: none;
+    cursor: pointer;
+  }
+  .lib-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--bla);
+    border: 3px solid #fff;
+    box-shadow: 0 2px 7px rgba(0,83,143,0.4);
+    cursor: pointer;
+  }
+  .lib-slider::-moz-range-thumb {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--bla); border: 3px solid #fff;
+    box-shadow: 0 2px 7px rgba(0,83,143,0.4); cursor: pointer;
+  }
+  .lib-slider__scale {
+    display: flex; justify-content: space-between;
+    font-size: 11.5px; font-weight: 600; color: var(--muted);
+  }
+
+  /* lägg till-knapp */
+  .lib-add {
+    width: 100%;
+    border: 1.5px dashed var(--linje-stark);
+    background: #fbfdfe;
+    color: var(--bla);
+    font-family: var(--sans); font-weight: 700; font-size: 14.5px;
+    border-radius: 13px;
+    height: 52px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: border-color .15s, background .15s, color .15s;
+    margin-top: 4px;
+  }
+  .lib-add:hover { border-color: var(--bla); background: #f1f8fc; }
+  .lib-add svg { width: 17px; height: 17px; }
+
+  /* ---- Resultat ---- */
+  .lib-result {
+    margin-top: 30px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #f4f9fd 0%, #eef6fb 100%);
+    border: 1px solid #dcebf5;
+    padding: 26px 28px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .lib-result::before {
+    content: "";
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 6px; background: var(--saffran);
+  }
+  .lib-result__eyebrow {
+    font-weight: 800; font-size: 11.5px; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--bla-djup);
+    margin: 0 0 6px;
+  }
+  .lib-result__hero {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .lib-result__num {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: 56px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+  }
+  .lib-result__unit {
+    font-weight: 800; font-size: 19px; color: var(--ink);
+  }
+  .lib-result__sub {
+    font-size: 17.5px; line-height: 1.5; color: var(--ink);
+    margin: 16px 0 0; text-wrap: pretty; font-weight: 600;
+  }
+  .lib-result__sub b { color: var(--bla-djup); }
+  .lib-result__mini {
+    display: flex; gap: 22px; margin-top: 18px;
+    border-top: 1px solid #dcebf5; padding-top: 16px;
+    flex-wrap: wrap;
+  }
+  .lib-mini__k { font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); margin: 0 0 3px; }
+  .lib-mini__v { font-size: 19px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  /* Vad motsvarar detta */
+  .lib-equiv {
+    margin-top: 18px;
+    border: 1px solid var(--linje);
+    border-radius: 16px;
+    padding: 22px 24px;
+    background: #fff;
+  }
+  .lib-equiv__head {
+    font-weight: 800; font-size: 14.5px; color: var(--ink);
+    margin: 0 0 16px; line-height: 1.4;
+  }
+  .lib-equiv__head span { color: var(--bla); font-variant-numeric: tabular-nums; }
+  .lib-equiv__list {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 13px;
+  }
+  .lib-equiv__list li {
+    display: flex; align-items: center; gap: 13px;
+    font-size: 15.5px; color: var(--text); font-weight: 600; line-height: 1.35;
+  }
+  .lib-equiv__ico {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #eef6fb; color: var(--bla);
+    display: grid; place-items: center; flex: none;
+  }
+  .lib-equiv__ico svg { width: 19px; height: 19px; }
+  .lib-equiv__n { color: var(--ink); font-weight: 800; }
+
+  /* jämförelse-staplar */
+  .lib-compare { margin-top: 26px; }
+  .lib-compare__head {
+    font-size: 12.5px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 14px;
+  }
+  .lib-bar { margin-bottom: 13px; }
+  .lib-bar__row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 13.5px; margin-bottom: 5px;
+  }
+  .lib-bar__name { font-weight: 700; color: var(--ink); }
+  .lib-bar__name em { font-style: normal; font-weight: 600; color: var(--muted); font-size: 12px; }
+  .lib-bar__pct { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .lib-bar__track { height: 12px; border-radius: 99px; background: #e9eef3; overflow: hidden; }
+  .lib-bar__fill { height: 100%; border-radius: 99px; transition: width .6s cubic-bezier(.22,.61,.36,1); }
+  .lib-bar--huddinge .lib-bar__fill { background: var(--bla); }
+  .lib-bar--sthlm .lib-bar__fill { background: var(--himmel); }
+  .lib-compare__note {
+    font-size: 13px; line-height: 1.55; color: var(--muted);
+    margin: 4px 0 0; text-wrap: pretty;
+  }
+  .lib-compare__note b { color: var(--saffran-djup); font-weight: 800; }
+
+  /* ---- CTA ---- */
+  .lib-cta {
+    margin-top: 30px;
+    background: var(--bla);
+    border-radius: 18px;
+    padding: 26px 28px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .lib-cta__petals {
+    position: absolute; right: -30px; bottom: -40px;
+    width: 170px; height: 170px; opacity: 0.14; color: #fff; pointer-events: none;
+  }
+  .lib-cta__h {
+    font-family: var(--serif); font-weight: 700; font-size: 20px;
+    margin: 0 0 8px; line-height: 1.3; position: relative;
+  }
+  .lib-cta__p {
+    font-size: 14.5px; line-height: 1.6; margin: 0 0 20px;
+    color: rgba(255,255,255,0.92); max-width: 42ch; position: relative;
+  }
+  .lib-cta__actions { display: flex; flex-wrap: wrap; gap: 12px; position: relative; }
+  .lib-btn {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--sans); font-weight: 800; font-size: 15px;
+    border-radius: 12px; padding: 14px 22px; cursor: pointer;
+    text-decoration: none; border: none; transition: transform .12s, box-shadow .15s, background .15s;
+  }
+  .lib-btn--primary {
+    background: var(--saffran); color: var(--bla-morkast);
+    box-shadow: 0 8px 22px -8px rgba(250,187,0,0.7);
+  }
+  .lib-btn--primary:hover { background: #ffc724; transform: translateY(-1px); }
+  .lib-btn--ghost {
+    background: rgba(255,255,255,0.12); color: #fff;
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.4);
+  }
+  .lib-btn--ghost:hover { background: rgba(255,255,255,0.2); }
+  .lib-btn svg { width: 17px; height: 17px; }
+
+  /* ---- Fotnot ---- */
+  .lib-foot {
+    margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--linje);
+    font-size: 11.5px; line-height: 1.6; color: var(--muted);
+  }
+  .lib-foot b { color: var(--text); font-weight: 700; }
+
+  @media (max-width: 560px) {
+    .lib-calc__inner { padding: 28px 22px 26px; }
+    .lib-calc__title { font-size: 23px; }
+    .lib-result__num { font-size: 44px; }
+    .lib-result { padding: 22px 20px; }
+    .lib-cta { padding: 22px 20px; }
+    .lib-btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lib-calc" data-screen-label="Skattekalkylator">
+
+  <div class="lib-calc__inner">
+
+    <!-- Rubrik -->
+    <h2 class="lib-calc__title">Vet du hur mycket <b>mer</b> du betalar i skatt – bara för att du bor i Huddinge?</h2>
+    <p class="lib-calc__intro">Huddinge har högre kommunalskatt än Stockholms stad. Skriv in era månadslöner så räknar vi ut vad skillnaden kostar er familj – varje år.</p>
+
+    <!-- Person 1 -->
+    <div class="lib-field">
+      <div class="lib-field__top">
+        <label class="lib-field__label" for="lon1">Din månadslön före skatt</label>
+      </div>
+      <div class="lib-input">
+        <input type="number" id="lon1" inputmode="numeric" value="35000" min="0" max="200000" step="500" aria-label="Din månadslön före skatt" />
+        <span class="lib-input__suffix">kr / mån</span>
+      </div>
+      <input type="range" class="lib-slider" id="slider1" min="0" max="100000" step="500" value="35000" aria-label="Justera din månadslön" />
+      <div class="lib-slider__scale"><span>0 kr</span><span>50 000</span><span>100 000+</span></div>
+    </div>
+
+    <!-- Person 2 (dold tills man lägger till) -->
+    <div class="lib-field" id="field2" hidden>
+      <div class="lib-field__top">
+        <label class="lib-field__label" for="lon2">Vuxen 2 – månadslön före skatt</label>
+        <button type="button" class="lib-field__remove" id="remove2">Ta bort</button>
+      </div>
+      <div class="lib-input">
+        <input type="number" id="lon2" inputmode="numeric" value="32000" min="0" max="200000" step="500" aria-label="Vuxen 2 månadslön före skatt" />
+        <span class="lib-input__suffix">kr / mån</span>
+      </div>
+      <input type="range" class="lib-slider" id="slider2" min="0" max="100000" step="500" value="32000" aria-label="Justera vuxen 2 månadslön" />
+      <div class="lib-slider__scale"><span>0 kr</span><span>50 000</span><span>100 000+</span></div>
+    </div>
+
+    <!-- Lägg till vuxen -->
+    <button type="button" class="lib-add" id="addAdult">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Lägg till en vuxen till
+    </button>
+
+    <!-- Resultat -->
+    <div class="lib-result" aria-live="polite">
+      <p class="lib-result__eyebrow">Din familj betalar i Huddinge</p>
+      <div class="lib-result__hero">
+        <span class="lib-result__num" id="heroNum">0</span>
+        <span class="lib-result__unit">kr mer per år</span>
+      </div>
+      <p class="lib-result__sub">…jämfört med om ni bott i <b>Stockholms stad</b>. Det är pengar som hade stannat i er egen plånbok.</p>
+      <div class="lib-result__mini">
+        <div>
+          <p class="lib-mini__k">Per månad</p>
+          <p class="lib-mini__v"><span id="perManad">0</span> kr</p>
+        </div>
+        <div>
+          <p class="lib-mini__k">På en mandatperiod (4 år)</p>
+          <p class="lib-mini__v"><span id="perMandat">0</span> kr</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vad motsvarar detta? -->
+    <div class="lib-equiv" id="equivBlock">
+      <p class="lib-equiv__head"><span id="equivAmount">0</span> kr om året motsvarar ungefär:</p>
+      <ul class="lib-equiv__list" id="equivList"></ul>
+    </div>
+
+    <!-- Jämförelse -->
+    <div class="lib-compare">
+      <p class="lib-compare__head">Total kommunalskatt 2026</p>
+      <div class="lib-bar lib-bar--huddinge">
+        <div class="lib-bar__row"><span class="lib-bar__name">Huddinge</span><span class="lib-bar__pct">31,71 %</span></div>
+        <div class="lib-bar__track"><div class="lib-bar__fill" id="barHuddinge" style="width:0%"></div></div>
+      </div>
+      <div class="lib-bar lib-bar--sthlm">
+        <div class="lib-bar__row"><span class="lib-bar__name">Stockholms stad</span><span class="lib-bar__pct">30,55 %</span></div>
+        <div class="lib-bar__track"><div class="lib-bar__fill" id="barSthlm" style="width:0%"></div></div>
+      </div>
+      <p class="lib-compare__note">Skillnaden är 1,16 procentenheter. För en familj blir det tusenlappar varje år.</p>
+    </div>
+
+    <!-- CTA -->
+    <div class="lib-cta">
+      <svg class="lib-cta__petals" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <g fill="currentColor">
+          <ellipse cx="50" cy="22" rx="9" ry="20"/><ellipse cx="50" cy="78" rx="9" ry="20"/>
+          <ellipse cx="22" cy="50" rx="20" ry="9"/><ellipse cx="78" cy="50" rx="20" ry="9"/>
+          <ellipse cx="30" cy="30" rx="9" ry="18" transform="rotate(45 30 30)"/>
+          <ellipse cx="70" cy="30" rx="9" ry="18" transform="rotate(-45 70 30)"/>
+          <ellipse cx="30" cy="70" rx="9" ry="18" transform="rotate(-45 30 70)"/>
+          <ellipse cx="70" cy="70" rx="9" ry="18" transform="rotate(45 70 70)"/>
+        </g>
+      </svg>
+      <h3 class="lib-cta__h">Det här vill vi ändra på.</h3>
+      <p class="lib-cta__p">Liberalerna i Huddinge vill att du ska få bättre valuta för dina skattepengar i kommunen. Läs mer om vad vi vill ändra på.</p>
+      <div class="lib-cta__actions">
+        <a class="lib-btn lib-btn--primary" href="https://www.liberalerna.se/bli-medlem/" target="_blank" rel="noopener">
+          Bli medlem
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="lib-btn lib-btn--ghost" href="https://huddinge.liberalerna.se" target="_blank" rel="noopener">Läs vår lokala politik</a>
+      </div>
+    </div>
+
+    <!-- Fotnot -->
+    <p class="lib-foot">
+      <b>Så räknar vi:</b> beloppet är inte en exakt skatteberäkning utan en uppskattning baserad på skillnaden i kommunalskatt mellan Huddinge (31,71 %) och Stockholms stad (30,55 %) för 2026. Den faktiska skillnaden varierar beroende på inkomst, ålder och personliga skatteförhållanden, men kalkylatorn ger en god bild av storleksordningen för de flesta löntagare. Källa: SCB och Skatteverket.
+    </p>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  var SKATT_HUDDINGE = 31.71;
+  var SKATT_STHLM    = 30.55;
+  var DIFF = (SKATT_HUDDINGE - SKATT_STHLM) / 100;
+
+  var nf = new Intl.NumberFormat('sv-SE');
+
+  var lon1 = document.getElementById('lon1');
+  var lon2 = document.getElementById('lon2');
+  var slider1 = document.getElementById('slider1');
+  var slider2 = document.getElementById('slider2');
+  var field2 = document.getElementById('field2');
+  var addBtn = document.getElementById('addAdult');
+  var removeBtn = document.getElementById('remove2');
+
+  var heroNum = document.getElementById('heroNum');
+  var perManad = document.getElementById('perManad');
+  var perMandat = document.getElementById('perMandat');
+  var equivList = document.getElementById('equivList');
+  var equivAmount = document.getElementById('equivAmount');
+  var equivBlock = document.getElementById('equivBlock');
+
+  var EQUIV = [
+    {
+      cost: 12000, ico: 'transit',
+      label: function (n) { return (n === 1 ? '1 månads' : n + ' månaders') + ' SL-kort'; }
+    },
+    {
+      cost: 8000, ico: 'sun',
+      label: function (n) { return (n === 1 ? 'en veckas' : n + ' veckors') + ' familjesemester i Sverige'; }
+    },
+    {
+      cost: 3000, ico: 'ball',
+      label: function (n) { return n + (n === 1 ? ' års avgift' : ' års avgifter') + ' till en fritidsaktivitet'; }
+    }
+  ];
+  var EQUIV_ICONS = {
+    transit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="15" rx="3"/><path d="M4 12h16M8 18l-2 3M16 18l2 3"/><circle cx="8.5" cy="15" r=".6" fill="currentColor"/><circle cx="15.5" cy="15" r=".6" fill="currentColor"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4l1.4-1.4M18 6l1.4-1.4"/></svg>',
+    ball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12a9 9 0 0 1 18 0M5.5 6.5c2 1.5 11 1.5 13 0M5.5 17.5c2-1.5 11-1.5 13 0"/></svg>'
+  };
+
+  function renderEquiv(arsExtra) {
+    equivAmount.textContent = nf.format(arsExtra);
+    if (arsExtra < 500) {
+      equivBlock.style.display = 'none';
+      return;
+    }
+    equivBlock.style.display = '';
+    var html = '';
+    for (var i = 0; i < EQUIV.length; i++) {
+      var n = Math.round(arsExtra / EQUIV[i].cost);
+      if (n < 1) continue;
+      html += '<li><span class="lib-equiv__ico">' + EQUIV_ICONS[EQUIV[i].ico] + '</span>'
+            + '<span><span class="lib-equiv__n">' + EQUIV[i].label(n) + '</span></span></li>';
+    }
+    equivList.innerHTML = html;
+  }
+
+  var hasTwo = false;
+
+  function clampVal(v) {
+    v = parseFloat(v); if (isNaN(v) || v < 0) v = 0; if (v > 200000) v = 200000; return Math.round(v);
+  }
+
+  function animateTo(el, target) {
+    var start = parseFloat((el.textContent || '0').replace(/\s/g, '')) || 0;
+    if (start === target) { el.textContent = nf.format(target); return; }
+    var dur = 480, t0 = performance.now();
+    function step(now) {
+      var p = Math.min((now - t0) / dur, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      el.textContent = nf.format(Math.round(start + (target - start) * e));
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function compute() {
+    var v1 = clampVal(lon1.value);
+    var v2 = hasTwo ? clampVal(lon2.value) : 0;
+    var hushall = v1 + v2;
+    var arsExtra = Math.round(hushall * 12 * DIFF);
+    animateTo(heroNum, arsExtra);
+    animateTo(perManad, Math.round(arsExtra / 12));
+    animateTo(perMandat, arsExtra * 4);
+    renderEquiv(arsExtra);
+  }
+
+  function drawBars() {
+    var max = SKATT_HUDDINGE;
+    document.getElementById('barHuddinge').style.width = (SKATT_HUDDINGE / max * 100) + '%';
+    document.getElementById('barSthlm').style.width = (SKATT_STHLM / max * 100) + '%';
+  }
+
+  function sync(numEl, sliderEl) {
+    numEl.addEventListener('input', function () {
+      var v = clampVal(numEl.value);
+      sliderEl.value = Math.min(v, parseInt(sliderEl.max, 10));
+      compute();
+    });
+    sliderEl.addEventListener('input', function () {
+      numEl.value = sliderEl.value;
+      compute();
+    });
+  }
+  sync(lon1, slider1);
+  sync(lon2, slider2);
+
+  addBtn.addEventListener('click', function () {
+    hasTwo = true;
+    field2.hidden = false;
+    addBtn.style.display = 'none';
+    lon2.focus();
+    compute();
+  });
+  removeBtn.addEventListener('click', function () {
+    hasTwo = false;
+    field2.hidden = true;
+    addBtn.style.display = '';
+    compute();
+  });
+
+  drawBars();
+  requestAnimationFrame(function () {
+    requestAnimationFrame(compute);
+  });
+})();
+</script>
+
+</body>
+</html>
